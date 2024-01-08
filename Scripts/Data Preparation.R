@@ -28,6 +28,8 @@ library(dplyr)
 fh <- fh_data %>% select(`Country/Territory`, `C/T?`, `Edition`, `Status`, `PR`, `CL`, `Total`) %>%
   filter(`C/T?` == "c" & `Edition` == "2022") %>%
   rename(Country = `Country/Territory`, Year = `Edition`, Status = `Status`, Political_Rights = `PR`, Civil_Liberties = `CL`, Total_Score = `Total`)
+class(fh$Total_Score)
+class(fh$Status)
 
 # same for population data, but also removing the first 3 rows
 colnames(Pop_data)
