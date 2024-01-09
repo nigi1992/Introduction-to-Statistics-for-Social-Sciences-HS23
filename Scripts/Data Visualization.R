@@ -25,6 +25,7 @@ new_data <- data.frame(Log_Population = seq(min(fh_pop_gdp$Log_Population),
                                             length.out = 100))
 # predicting probabilities
 new_data$Status_prob <- predict(fit_ord, newdata = new_data, type = "probs")
+predicted_probs <- predict(fit_ord, newdata = new_data, type = "probs")
 # adding the predicted probabilities to new_data 
 new_data[c("NF", "PF", "F")] <- predicted_probs
 # reshaping the data to long format for ggplot2

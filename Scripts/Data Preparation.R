@@ -7,8 +7,8 @@ library(readxl)
 #file_path <- "Input Data/data.xlsx"
 # Reading Excel file
 fh_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/Aggregate_Category_and_Subcategory_Scores_FIW_2003-2022.xlsx")
-head(fh)
-View(fh)
+head(fh_data)
+View(fh_data)
 
 # Importing Population Data (xls)
 Pop_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/API_SP.POP.TOTL_DS2_en_excel_v2_6299418.xls")

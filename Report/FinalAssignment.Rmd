@@ -15,74 +15,73 @@ https://freedomhouse.org/sites/default/files/2023-02/Aggregate_Category_and_Subc
 https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel 
 https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.PP.CD?downloadformat=excel 
 
-Merging these three data sets was not straight forward and I had to undertake a number of steps to clean and prepare the data. I had to select, filter, rename, merge and convert. I also had to deal with missing values and outliers. The dpylr package and its pipe operator %>% was here especially helpful. It is also worth mentioning that I only looked at values for the year 2022 and did not include a time-series model. These steps are all documented in the "Data Preparation.R" file. 
+Merging these three data sets was not straight forward and I had to undertake a number of steps to clean and prepare the data. I had to select, filter, rename, merge and convert. I also had to deal with missing values and outliers. The dpylr package and its pipe operator %>% were here especially helpful. It is also worth mentioning that I only looked at values for the year 2022 and did not include a time-series model. These steps are all documented in the "Data Preparation.R" file. 
 Please note that all the data sets I used, are included in this repository in the folder. I have included the final data set "fh_pop_gdp.csv" in the "Input Data" folder, as to avoid having a reader to down- and upload and adjust 3 different Excel Files. A command to read said csv file is included at the beginning of the Statistical Analysis File. It is therefore not necessary to run the following code chunk. 
 ```{r}
 ### Data Preparation
 #### Importing the data
 
 # Importing Freedom House Aggregate Scores (xlsx)
-install.packages("readxl")
-library(readxl)
+#install.packages("readxl")
+#library(readxl)
 #file_path <- "Input Data/data.xlsx"
 # Reading Excel file
-fh_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/Aggregate_Category_and_Subcategory_Scores_FIW_2003-2022.xlsx")
-head(fh)
-View(fh)
+#fh_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/Aggregate_Category_and_Subcategory_Scores_FIW_2003-2022.xlsx")
+#head(fh_data)
+#View(fh_data)
 
 # Importing Population Data (xls)
-Pop_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/API_SP.POP.TOTL_DS2_en_excel_v2_6299418.xls")
-head(Pop_data)
-View(Pop_data)
+#Pop_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/API_SP.POP.TOTL_DS2_en_excel_v2_6299418.xls")
+#head(Pop_data)
+#View(Pop_data)
 
 # Importing GDP per Capita Data (xls)
-GDPperCapita_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/API_NY.GDP.PCAP.PP.CD_DS2_en_excel_v2_6299221.xls")
-head(GDPperCapita_data)
-View(GDPperCapita_data)
+#GDPperCapita_data <- read_excel("/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/API_NY.GDP.PCAP.PP.CD_DS2_en_excel_v2_6299221.xls")
+#head(GDPperCapita_data)
+#View(GDPperCapita_data)
 
 # Preparing the data for merge
-install.packages(dplyr)
-library(dplyr)
+#install.packages(dplyr)
+#library(dplyr)
 
 # selecting relevant columns, filtering out territories + year earlier than 2022 and renaming columns
-fh <- fh_data %>% select(`Country/Territory`, `C/T?`, `Edition`, `Status`, `PR`, `CL`, `Total`) %>%
-  filter(`C/T?` == "c" & `Edition` == "2022") %>%
-  rename(Country = `Country/Territory`, Year = `Edition`, Status = `Status`, Political_Rights = `PR`, Civil_Liberties = `CL`, Total_Score = `Total`)
-class(fh$Total_Score)
-class(fh$Status)
+#fh <- fh_data %>% select(`Country/Territory`, `C/T?`, `Edition`, `Status`, `PR`, `CL`, `Total`) %>%
+ # filter(`C/T?` == "c" & `Edition` == "2022") %>%
+ # rename(Country = `Country/Territory`, Year = `Edition`, Status = `Status`, Political_Rights = `PR`, Civil_Liberties = `CL`, Total_Score = `Total`)
+#class(fh$Total_Score)
+#class(fh$Status)
 
 # same for population data, but also removing the first 3 rows
-colnames(Pop_data)
-Pop <- Pop_data %>% select(`Data Source`, `...67`) %>%
-  rename(Country = `Data Source`, Population = `...67`) %>% 
-  slice(-1:-3)
+#colnames(Pop_data)
+#Pop <- Pop_data %>% select(`Data Source`, `...67`) %>%
+  #rename(Country = `Data Source`, Population = `...67`) %>% 
+ # slice(-1:-3)
 # turns out values are set as characters which is not ideal for later calculations
-class(Pop$Population)
+#class(Pop$Population)
 # converting to numeric
-Pop$Population <- as.numeric(Pop$Population)
-class(Pop$Population)
+#Pop$Population <- as.numeric(Pop$Population)
+#class(Pop$Population)
 
 # same for GDP per capita data
-GDPperCapita <- GDPperCapita_data %>% select(`Data Source`, `...67`) %>%
-  rename(Country = `Data Source`, GDP_per_Capita = `...67`) %>% 
-  slice(-1:-3)
+#GDPperCapita <- GDPperCapita_data %>% select(`Data Source`, `...67`) %>%
+ # rename(Country = `Data Source`, GDP_per_Capita = `...67`) %>% 
+ # slice(-1:-3)
 # converting to numeric
-GDPperCapita$GDP_per_Capita <- as.numeric(GDPperCapita$GDP_per_Capita)
+#GDPperCapita$GDP_per_Capita <- as.numeric(GDPperCapita$GDP_per_Capita)
 
 # Merging the data
 # merging Freedom House and Population data
-fh_pop <- fh %>% left_join(Pop, by = "Country")
+#fh_pop <- fh %>% left_join(Pop, by = "Country")
 # merging Freedom House, Population and GDP per Capita data
-fh_pop_gdp <- fh_pop %>% left_join(GDPperCapita, by = "Country")
+#fh_pop_gdp <- fh_pop %>% left_join(GDPperCapita, by = "Country")
 
 # Filtering NA values
-fh_pop_gdp <- filter(fh_pop_gdp, !is.na(GDP_per_Capita) & !is.na(Population))
-View(fh_pop_gdp)
+#fh_pop_gdp <- filter(fh_pop_gdp, !is.na(GDP_per_Capita) & !is.na(Population))
+#View(fh_pop_gdp)
 
 # Saving as csv.file
-file_path <- "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/fh_pop_gdp.csv"
-write.csv(fh_pop_gdp, file_path, row.names = FALSE)
-
+#file_path <- "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/fh_pop_gdp.csv"
+#write.csv(fh_pop_gdp, file_path, row.names = FALSE)
 ```
 However, one might still have to change the file path at the beginning of the next script in order to load the correct data frame, which I used for the regression analysis. Most of the work can be found here in the "Statistical Analysis.R" file: 
 This first attempt at simply regressing the Population Size, as an independent variable on the Freedom Score, as the dependent variable  was unsatisfactory. All the relevant values were highly insignificant, pointing to no connection between the two variables whatsoever. This is due to the fact that the Freedom Score, although set in R as a numeric type, is more like a categorical variable than a continuous variable, as the "Total_Score" Variable represents a score from 0 to 100, which is suitable for a linear regression, but not ideal.
@@ -90,7 +89,7 @@ This first attempt at simply regressing the Population Size, as an independent v
 ### Statistical Analysis
 ## Bi-Variate Model
 # The bi-variate model is used to determine the relationship between the two variables: Population and Freedom Score
-library(tidyverse)
+#library(tidyverse)
 
 # importing the data
 library(readr)
@@ -111,7 +110,7 @@ fh_pop_gdp$Status <- factor(fh_pop_gdp$Status, levels = c('NF', 'PF', 'F'))
 levels(fh_pop_gdp$Status)
 
 # running multinomial logistic regression
-install.packages("nnet")
+#install.packages("nnet")
 library(nnet)
 fit1b <- multinom(Status ~ Population, data = fh_pop_gdp)
 summary(fit1b)
@@ -131,7 +130,7 @@ summary(fit1b_transformed)
 The crux was, that I did not order the 3 categories of the "Status" variable, even though is a clear hierarchy: NF < PF < F. Once I did an ordinal logistic regression, the coefficients improved significantly.
 ```{r}
 # Ordered Logistic Regression
-install.packages("MASS")
+#install.packages("MASS")
 library(MASS)
 # converting 'Status' to an ordered factor
 fh_pop_gdp$Status <- factor(fh_pop_gdp$Status, levels = c('NF', 'PF', 'F'), ordered = TRUE)
@@ -140,7 +139,7 @@ levels(fh_pop_gdp$Status)
 fit_ord <- polr(Status ~ Log_Population, data = fh_pop_gdp, Hess = TRUE)
 summary(fit_ord)
 ```
-But at last, I decided to go with the numeric "Total_Score" variable as the dependent variable. This way I could better introduce the "GDP per Capita" variable as a confounding variable for the second Regression model. 
+This is better: The coefficient for Log_Population is -0.3493. The negative sign indicates that as Log_Population increases, the log-odds of being in a higher category of Status decrease. In other words, higher population (on a logarithmic scale) is associated with a lower likelihood of being 'Partially Free' (PF) or 'Free' (F) compared to 'Not Free' (NF). The significant intercepts indicate that the model differentiates between the categories of Status effectively. But at last, I decided to go with the numeric "Total_Score" variable as the dependent variable. This way I could better introduce the "GDP per Capita" variable as a confounding variable for the second Regression model. 
 ```{r}
 ## Trying Total_Score as dependent variable again, but with Log_Population as independent
 fit1c <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Log_Population, data = fh_pop_gdp)
@@ -162,8 +161,8 @@ In the script "Data Visualization.R" I plotted the first regression model (bi-va
 ### Plotting the Regression Models
 
 # Loading the required libraries
-library(tidyverse)
-library(tidyr)
+#library(tidyverse)
+#library(tidyr)
 library(ggplot2)
 library(here)
 
@@ -175,9 +174,7 @@ ggplot(fh_pop_gdp, aes(x = Log_Population, y = Total_Score)) +
        x = "Population",
        y = "Total Score") +
   theme(plot.title = element_text(hjust = 0.5))
-ggsave(file = here("Output", "Plot1.png")) #saving as image
-
-
+#ggsave(file = here("Output", "Plot1.png")) #saving as image
 ```
 I also tired to plot the fit_ord regression model (ordinal regression) in order to visualize the difference between the variables NF, PF and F. However this proved more difficult and required creating a new data frame with the predicted values from the regression model.
 ```{r}
@@ -189,6 +186,7 @@ new_data <- data.frame(Log_Population = seq(min(fh_pop_gdp$Log_Population),
                                             length.out = 100))
 # predicting probabilities
 new_data$Status_prob <- predict(fit_ord, newdata = new_data, type = "probs")
+predicted_probs <- predict(fit_ord, newdata = new_data, type = "probs")
 # adding the predicted probabilities to new_data 
 new_data[c("NF", "PF", "F")] <- predicted_probs
 # reshaping the data to long format for ggplot2
@@ -203,7 +201,7 @@ ggplot(new_data_long, aes(x = Log_Population, y = Probability, color = Status)) 
        x = "Log Population",
        y = "Predicted Probability") +
   theme_minimal()
-ggsave(file = here("Output", "Plot1b.png")) #saving as image
+#ggsave(file = here("Output", "Plot1b.png")) #saving as image
 ```
 Lastly, I tired to plot the second regression model (multivariate) in order to visualize the relationship between the variables. This was even more difficult, because I am dealing with more than two dimensions. One approach is to use partial regression plots, which show the relationship between the dependent variable and one predictor while holding the other predictors constant. But the outcome is not really useful, with the trend line in both plots widely deviating from the data points, which suggest that there might be other factors not included in this model.
 ```{r}
@@ -226,7 +224,7 @@ ggplot(plot_data1, aes(x = Log_Population, y = Total_Score)) +
        x = "Log Population",
        y = "Total Score") +
   theme_minimal()
-ggsave(file = here("Output", "Plot2a.png")) #saving as image
+#ggsave(file = here("Output", "Plot2a.png")) #saving as image
 
 # Create a new data frame for plotting
 plot_data2 <- data.frame(
@@ -246,10 +244,9 @@ ggplot(plot_data2, aes(x = GDP_per_Capita, y = Total_Score)) +
        x = "GDP per Capita",
        y = "Total Score") +
   theme_minimal()
-ggsave(file = here("Output", "Plot2b.png")) #saving as image
-
+#ggsave(file = here("Output", "Plot2b.png")) #saving as image
 ```
-Interpretation of the regression tables
+Interpretation of the regression tables:
 Table 1:
 ```{r}
 ## Regression Table
@@ -268,7 +265,6 @@ Table 2:
 ```{r}
 # Table 2          
 stargazer(fit1c, fit_ord, fit2, type = "text", title = "Regression Table 2", out = "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Output/Regression Table 2.txt") 
-
 ```
 This regression table includes the Ordered logistical regression from before and has an equally highly significant p-value for the Log_Population coefficient, but it does not provide any further insights and is therefore not useful for further analysis.
 
@@ -276,8 +272,8 @@ Discussion:
 Overall, the model seems promising, but is not complete. If I had more time, I could do several things to improve the robustness and relevance of the model:
 1. Including more confounding variables, in order to better explain the variability in the dependent variable. Examples are: Year of independence (especially relevant in the context of ex colonies, as they had less time to develop), Constitutional framework (Republic/Monarchy), Cultural Hetero-/Homogeneity (homogenic  countries could be more stable), etc.  
 2. Including more years to get a more complete picture (time-series). I only looked at the year 2022 and because of that I have a small amount of data points (160 observations). This could be improved by looking at more years, but also by looking at the data in a time-series context. This would allow me to see how the scores have changed over time and if there are any trends.
-3. Preparing the data more carefully. Some countries were omitted in the data preparation process, because of different spelling or different names for the country names.
-4. For the dependent variable I could also look at different democracy indexes such as Polity IV, Demokratie Barometer, V-Dem, etc.
-5. The solution for the wide range of Population size values was adequate in this context, but perhaps a different kind of transformation would be more appropriate, ie the base-10 logarithm.
+3. Preparing the data more carefully. Some countries were omitted in the data preparation process, because of different spelling or different names for the country names. This further lowered the number of observations from potentially 195 possible countries in the original Freedom House data set to 160.
+4. For the dependent variable I could also look at different democracy indexes such as Polity IV, Demokratie Barometer, V-Dem, etc. Democracy Indexes are a good indication for the state of democracy in a country, but they are not without their own problems. They are often criticized for their methodology and biases.
+5. The solution to account for the wide range of Population size values was adequate in this context, but perhaps a different kind of transformation would be more appropriate, ie. the base-10 logarithm.
 
 Also interesting in this regard for a different research question is the well established positive correlation between "rule of law" scores and the wealth of a country, which could be further looked at by using the Freedom Score Indicators that gives a score to the rule of law in a country and regressing it on GDP per Capita.
