@@ -3,9 +3,10 @@
 # The bi-variate model is used to determine the relationship between the two variables: Population and Freedom Score
 library(tidyverse)
 
-# Filtering NA values
-fh_pop_gdp <- filter(fh_pop_gdp, !is.na(GDP_per_Capita) & !is.na(Population))
-View(fh_pop_gdp)
+# importing the data
+library(readr)
+file_path <- "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/fh_pop_gdp.csv"
+fh_pop_gdp <- read_csv(file_path)
 
 ## Regression Model 1
 fit1 <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Population, data = fh_pop_gdp)
@@ -51,6 +52,7 @@ fit1c <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Log_Population, data = fh_pop_gd
 summary(fit1c)
 
 ### The last two approaches deliver far better results than those before
+
 
 
 ## Multivariate Model

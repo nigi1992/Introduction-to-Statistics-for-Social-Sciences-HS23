@@ -54,3 +54,11 @@ GDPperCapita$GDP_per_Capita <- as.numeric(GDPperCapita$GDP_per_Capita)
 fh_pop <- fh %>% left_join(Pop, by = "Country")
 # merging Freedom House, Population and GDP per Capita data
 fh_pop_gdp <- fh_pop %>% left_join(GDPperCapita, by = "Country")
+
+# Filtering NA values
+fh_pop_gdp <- filter(fh_pop_gdp, !is.na(GDP_per_Capita) & !is.na(Population))
+View(fh_pop_gdp)
+
+# Saving as csv.file
+file_path <- "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Input Data/fh_pop_gdp.csv"
+write.csv(fh_pop_gdp, file_path, row.names = FALSE)
