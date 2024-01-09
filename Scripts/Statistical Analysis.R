@@ -1,5 +1,5 @@
 ### Statistical Analysis
-# Bi-Variate Model
+## Bi-Variate Model
 # The bi-variate model is used to determine the relationship between the two variables: Population and Freedom Score
 library(tidyverse)
 
@@ -7,7 +7,7 @@ library(tidyverse)
 fh_pop_gdp <- filter(fh_pop_gdp, !is.na(GDP_per_Capita) & !is.na(Population))
 View(fh_pop_gdp)
 
-### Regression Model 1
+## Regression Model 1
 fit1 <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Population, data = fh_pop_gdp)
 summary(fit1)
 
@@ -26,7 +26,7 @@ install.packages("nnet")
 library(nnet)
 fit1b <- multinom(Status ~ Population, data = fh_pop_gdp)
 summary(fit1b)
-# still unsatisying
+# still unsatisfying
 
 # trying to transform population variable to log scale, due to very large range of values
 fh_pop_gdp$Log_Population <- log(fh_pop_gdp$Population)
@@ -46,6 +46,23 @@ levels(fh_pop_gdp$Status)
 fit_ord <- polr(Status ~ Log_Population, data = fh_pop_gdp, Hess = TRUE)
 summary(fit_ord)
 
-# Trying Total_Score as dependent variable again, but with Log_Population as independent
+## Trying Total_Score as dependent variable again, but with Log_Population as independent
 fit1c <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Log_Population, data = fh_pop_gdp)
 summary(fit1c)
+
+### The last two approaches deliver far better results than those before
+
+
+## Multivariate Model
+# The multivariate model is used to determine the relationship between the three variables: Population, Freedom Score and GDP per Capita as the confounding variable
+
+## Regression Model 2
+fit2 <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Log_Population + fh_pop_gdp$GDP_per_Capita, data = fh_pop_gdp)
+summary(fit2)
+
+
+## Regression Table
+library(stargazer)
+stargazer(fit1c, fit2, type = "text", title = "Regression Table", out = "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Output/Regression Table.txt") 
+          
+
