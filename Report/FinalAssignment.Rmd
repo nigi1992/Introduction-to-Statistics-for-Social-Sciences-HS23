@@ -5,8 +5,7 @@ output: html_document
 This Capstone project is about the relationship between the size of a country and its level of democracy. I ask the following research question: "Is there a relationship between the size of a country and its level of democracy, ie. its Freedom Score?". 
 
 While thinking about a research question, I thought about my bachelor thesis on micro states and their relationship to democracy and monarchy respectively. My thesis was strictly qualitative and solely focused on two single countries (Monaco and Liechtenstein), but while researching the literature I stumbled upon a variety of democracy indexes, among others the Freedom House Index, which ranks countries worldwide according to democratization. I remembered there being a general correlation between small states and democracy and had a look at my paper again, where I found the following passage:
-"It turns out that there is a connection between monarchy and smallness as well as between democratization and smallness that should not be ignored. On the one hand, there appears to be a clear statistical correlation between
-state size and democratic governments. Small states are more likely to be democratic than large ones (Diamond and Tsalik 1999; Ott 2000; Anckar 2002; Srebrnik 2004)." (p.16).
+"It turns out that there is a connection between monarchy and smallness as well as between democratization and smallness that should not be ignored. On the one hand, there appears to be a clear statistical correlation between state size and democratic governments. Small states are more likely to be democratic than large ones (Diamond and Tsalik 1999; Ott 2000; Anckar 2002; Srebrnik 2004)." (p.16).
 Though already seemingly well established, I still got curious and wanted to see if this correlation holds true by regressing the so called Freedom Score from Freedom House on the population size of a country. My thinking was: "The smaller the country, the more likely it is to be democratic and the higher its Freedom Score should be". I also included a confounding variable, for which I chose GDP per Capita. I thought that the wealthier a country is, the more likely it is to be democratic. I wanted to see if the relationship between population size and democracy is still significant, when controlling for GDP per Capita.
 The Freedom Score is a composite score of political rights and civil liberties. It is a score between 0 and 100, where 0 is counted as least free and 100 as most free. The score is based on a number of indicators, which are weighted differently. The score is then divided into three categories: Free (F), Partly Free (PF) and Not Free (NF). 
 In order to accomplish this I needed to merge the Freedom House data set with a different data set that contained the Population Size for each country. The same had to be done for a third data set that contained the GDP per Capita for each country. At first, I downloaded to wrong data set, which lists nominal instead of PPP GDP per Capita (Purchase Power Parity), but luckily I noticed my mistake. I used data sets of the World Bank for both of this.
@@ -17,7 +16,7 @@ https://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=excel
 https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.PP.CD?downloadformat=excel 
 
 Merging these three data sets was not straight forward and I had to undertake a number of steps to clean and prepare the data. I had to select, filter, rename, merge and convert. I also had to deal with missing values and outliers. The dpylr package and its pipe operator %>% was here especially helpful. It is also worth mentioning that I only looked at values for the year 2022 and did not include a time-series model. These steps are all documented in the "Data Preparation.R" file. 
-Please note that all the data sets I used, are included in this repository in the folder. I have included the final data set "fh_pop_gdp.csv" in the "Input Data" folder, as to avoid having to upload and adjust 3 different Excel Files. A command to read said csv file is included at the beginning of the Statistical Analysis File. It is therefore not necessary to run the following code chunk. 
+Please note that all the data sets I used, are included in this repository in the folder. I have included the final data set "fh_pop_gdp.csv" in the "Input Data" folder, as to avoid having a reader to down- and upload and adjust 3 different Excel Files. A command to read said csv file is included at the beginning of the Statistical Analysis File. It is therefore not necessary to run the following code chunk. 
 ```{r}
 ### Data Preparation
 #### Importing the data
@@ -86,6 +85,7 @@ write.csv(fh_pop_gdp, file_path, row.names = FALSE)
 
 ```
 However, one might still have to change the file path at the beginning of the next script in order to load the correct data frame, which I used for the regression analysis. Most of the work can be found here in the "Statistical Analysis.R" file: 
+This first attempt at simply regressing the Population Size, as an independent variable on the Freedom Score, as the dependent variable  was unsatisfactory. All the relevant values were highly insignificant, pointing to no connection between the two variables whatsoever. This is due to the fact that the Freedom Score, although set in R as a numeric type, is more like a categorical variable than a continuous variable, as the "Total_Score" Variable represents a score from 0 to 100, which is suitable for a linear regression, but not ideal.
 ```{r}
 ### Statistical Analysis
 ## Bi-Variate Model
@@ -101,35 +101,183 @@ fh_pop_gdp <- read_csv(file_path)
 fit1 <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Population, data = fh_pop_gdp)
 summary(fit1)
 ```
-This first attempt at simply regressing the Freedom Score on the Population Size was unsatisfactory. 
+I also tried to use the ""Status" Variable (NF, PF, F) as the dependent variable by transforming it from a character variable into a factor variable. This way, I could do a multinomial logistic regression, which is suitable for regressing categorical with a numeric, continuous variable.
+Though better and pointing in the right direction, this was still unsatisfactory.
+```{r}
+# error message due to the fact that the Status variable is not numeric, but ordinal
+# trying to convert it to factor variable
+fh_pop_gdp$Status <- factor(fh_pop_gdp$Status, levels = c('NF', 'PF', 'F'))
+# checking the levels to confirm they are in the correct order
+levels(fh_pop_gdp$Status)
 
-- explain what you did next until you got to the final model
-- interpret the fit_ord and the fit1c
-- also include the graphs from Data visualization
-- continue with the interpretation of fit2 and the regression table
-- explain what you would do if you had more time
-- include more years to get a more complete picture (time-series), more confounding variables, such as republic/monarchy, year of independence (ex colonies), and for the dependent variable I could look at different democracy indexes such as Polity IV, Demokratie Barometer, V-Dem, etc.
-- also interesting in this regard for a different research question is the well established positive correlation between "rule of law" scores and the wealth of a country, which could be further looked at by using the Freedom Score Indicators that gives a score to the rule of law in a country and regressing it on GDP per Capita.
+# running multinomial logistic regression
+install.packages("nnet")
+library(nnet)
+fit1b <- multinom(Status ~ Population, data = fh_pop_gdp)
+summary(fit1b)
+# still unsatisfying
+```
+The ""Population" variable on the other hand, had a very large range (from 11'212 to 1'417'173'173), which is also not ideal for a meaningful analysis, so I decided to do a logarithmic transformation.
+Once again, an improvement is visible, there seems to be a negative correlation between the population size and the freedom score, but in this state, the model could not provide any insights into its statistical significance. Neither the p-value, nor R values or residual deviance and AIC values were available.
+```{r}
+# trying to transform population variable to log scale, due to very large range of values
+fh_pop_gdp$Log_Population <- log(fh_pop_gdp$Population)
+summary(fh_pop_gdp$Log_Population)
+# rerunning the regression with the transformed variable
+fit1b_transformed <- multinom(Status ~ Log_Population, data = fh_pop_gdp)
+summary(fit1b_transformed)
+# better, but there is room for improvement
+```
+The crux was, that I did not order the 3 categories of the "Status" variable, even though is a clear hierarchy: NF < PF < F. Once I did an ordinal logistic regression, the coefficients improved significantly.
+```{r}
+# Ordered Logistic Regression
+install.packages("MASS")
+library(MASS)
+# converting 'Status' to an ordered factor
+fh_pop_gdp$Status <- factor(fh_pop_gdp$Status, levels = c('NF', 'PF', 'F'), ordered = TRUE)
+levels(fh_pop_gdp$Status)
+# fitting the ordinal logistic regression model
+fit_ord <- polr(Status ~ Log_Population, data = fh_pop_gdp, Hess = TRUE)
+summary(fit_ord)
+```
+But at last, I decided to go with the numeric "Total_Score" variable as the dependent variable. This way I could better introduce the "GDP per Capita" variable as a confounding variable for the second Regression model. 
+```{r}
+## Trying Total_Score as dependent variable again, but with Log_Population as independent
+fit1c <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Log_Population, data = fh_pop_gdp)
+summary(fit1c)
+
+### The last two approaches deliver far better results than those before
 
 
 
+## Multivariate Model
+# The multivariate model is used to determine the relationship between the three variables: Population, Freedom Score and GDP per Capita as the confounding variable
+
+## Regression Model 2
+fit2 <- lm(fh_pop_gdp$Total_Score ~ fh_pop_gdp$Log_Population + fh_pop_gdp$GDP_per_Capita, data = fh_pop_gdp)
+summary(fit2)
+```
+In the script "Data Visualization.R" I plotted the first regression model (bi-variate) for better understanding. It shows the negative relationship between the log of the population size and the total score. But the points are not tightly clustered around the trend line, which suggests that the log population size does not fully account for the variation in 'Total Score'.
+```{r}
+### Plotting the Regression Models
+
+# Loading the required libraries
+library(tidyverse)
+library(tidyr)
+library(ggplot2)
+library(here)
+
+## Plotting the Regression Models for the Bi-Variate Analysis
+ggplot(fh_pop_gdp, aes(x = Log_Population, y = Total_Score)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Total Score vs. Population",
+       x = "Population",
+       y = "Total Score") +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave(file = here("Output", "Plot1.png")) #saving as image
 
 
+```
+I also tired to plot the fit_ord regression model (ordinal regression) in order to visualize the difference between the variables NF, PF and F. However this proved more difficult and required creating a new data frame with the predicted values from the regression model.
+```{r}
+# trying the other more complicated ordered logistic regression model
 
+# creating a new data frame for predictions
+new_data <- data.frame(Log_Population = seq(min(fh_pop_gdp$Log_Population), 
+                                            max(fh_pop_gdp$Log_Population), 
+                                            length.out = 100))
+# predicting probabilities
+new_data$Status_prob <- predict(fit_ord, newdata = new_data, type = "probs")
+# adding the predicted probabilities to new_data 
+new_data[c("NF", "PF", "F")] <- predicted_probs
+# reshaping the data to long format for ggplot2
+new_data_long <- tidyr::pivot_longer(new_data, 
+                                     cols = c("NF", "PF", "F"),
+                                     names_to = "Status",
+                                     values_to = "Probability")
+# Plotting 
+ggplot(new_data_long, aes(x = Log_Population, y = Probability, color = Status)) +
+  geom_line() +
+  labs(title = "Predicted Probabilities of Status vs Log Population",
+       x = "Log Population",
+       y = "Predicted Probability") +
+  theme_minimal()
+ggsave(file = here("Output", "Plot1b.png")) #saving as image
+```
+Lastly, I tired to plot the second regression model (multivariate) in order to visualize the relationship between the variables. This was even more difficult, because I am dealing with more than two dimensions. One approach is to use partial regression plots, which show the relationship between the dependent variable and one predictor while holding the other predictors constant. But the outcome is not really useful, with the trend line in both plots widely deviating from the data points, which suggest that there might be other factors not included in this model.
+```{r}
+## Plotting the Regression Models for the Multivariate Analysis
+# Create a new dataframe for plotting
+plot_data1 <- data.frame(
+  Log_Population = fh_pop_gdp$Log_Population,
+  Total_Score = fh_pop_gdp$Total_Score,
+  GDP_per_Capita = fh_pop_gdp$GDP_per_Capita
+)
 
+# Add fitted values from the model
+plot_data1$fitted_values <- predict(fit2, newdata = plot_data1)
 
+# Plot
+ggplot(plot_data1, aes(x = Log_Population, y = Total_Score)) +
+  geom_point() +
+  geom_line(aes(y = fitted_values), color = "blue") +
+  labs(title = "Total Score vs Log Population",
+       x = "Log Population",
+       y = "Total Score") +
+  theme_minimal()
+ggsave(file = here("Output", "Plot2a.png")) #saving as image
 
+# Create a new data frame for plotting
+plot_data2 <- data.frame(
+  GDP_per_Capita = fh_pop_gdp$GDP_per_Capita,
+  Total_Score = fh_pop_gdp$Total_Score,
+  Log_Population = fh_pop_gdp$Log_Population
+)
 
+# Add fitted values from the model
+plot_data2$fitted_values <- predict(fit2, newdata = plot_data2)
 
+# Plot
+ggplot(plot_data2, aes(x = GDP_per_Capita, y = Total_Score)) +
+  geom_point() +
+  geom_line(aes(y = fitted_values), color = "blue") +
+  labs(title = "Total Score vs GDP per Capita",
+       x = "GDP per Capita",
+       y = "Total Score") +
+  theme_minimal()
+ggsave(file = here("Output", "Plot2b.png")) #saving as image
 
+```
+Interpretation of the regression tables
+Table 1:
+```{r}
+## Regression Table
+library(stargazer)
+# Table 1
+stargazer(fit1c, fit2, type = "text", title = "Regression Table", out = "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Output/Regression Table.txt") 
+```
+In the first model, the Log of population gives a value of -4.400. This suggests a negative relationship between the size of a population (when transformed logarithmically) and the total score, indicating that larger populations (on a log scale) tend to have lower scores, as was predicted.
+The Intercept stands at 130,355. This is quite high, but since a log population of zero is not practical (it would imply a population of 1), this value has to be seen in the context of the statistical model rather than a real world interpretation. The p-value for the Log_Population coefficient (<0.0001) is highly significant, implying that the relationship between the two variables is also statistically significant.
+The R-squared value suggests that approximately 10.5% of the variability in Total_Score can be explained by Log_Population. This leaves a large portion of variability in Total_Score unexplained. The F-statistic is 18.53, and its associated p-value is very small, indicating that the model is statistically significant.
 
+Model 2 adds GDP_per_Capita as a second independent variable. It has a significant positive coefficient, suggesting that higher GDP per capita is associated with an increase in the total score. Additionally, the coefficient for Log_Population remains negative and significant, even after controlling for GDP per capita. All the coefficients are significant at the 0.001 level. Both the R-squared and the adjusted R2 values have increased significantly, indicating a better fit of the model, when GDP per capita is included and suggests that around 24% of the variability in Total_Score can be explained by the model. 
+The significance of both predictors indicates a strong association with Total_Score, but as with any regression analysis, correlation does not imply causation.
 
+Table 2:
+```{r}
+# Table 2          
+stargazer(fit1c, fit_ord, fit2, type = "text", title = "Regression Table 2", out = "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Output/Regression Table 2.txt") 
 
+```
+This regression table includes the Ordered logistical regression from before and has an equally highly significant p-value for the Log_Population coefficient, but it does not provide any further insights and is therefore not useful for further analysis.
 
+Discussion:
+Overall, the model seems promising, but is not complete. If I had more time, I could do several things to improve the robustness and relevance of the model:
+1. Including more confounding variables, in order to better explain the variability in the dependent variable. Examples are: Year of independence (especially relevant in the context of ex colonies, as they had less time to develop), Constitutional framework (Republic/Monarchy), Cultural Hetero-/Homogeneity (homogenic  countries could be more stable), etc.  
+2. Including more years to get a more complete picture (time-series). I only looked at the year 2022 and because of that I have a small amount of data points (160 observations). This could be improved by looking at more years, but also by looking at the data in a time-series context. This would allow me to see how the scores have changed over time and if there are any trends.
+3. Preparing the data more carefully. Some countries were omitted in the data preparation process, because of different spelling or different names for the country names.
+4. For the dependent variable I could also look at different democracy indexes such as Polity IV, Demokratie Barometer, V-Dem, etc.
+5. The solution for the wide range of Population size values was adequate in this context, but perhaps a different kind of transformation would be more appropriate, ie the base-10 logarithm.
 
-
-
-
-
-
-
+Also interesting in this regard for a different research question is the well established positive correlation between "rule of law" scores and the wealth of a country, which could be further looked at by using the Freedom Score Indicators that gives a score to the rule of law in a country and regressing it on GDP per Capita.

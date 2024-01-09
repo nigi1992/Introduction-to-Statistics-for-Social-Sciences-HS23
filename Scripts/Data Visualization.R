@@ -39,9 +39,11 @@ ggplot(new_data_long, aes(x = Log_Population, y = Probability, color = Status)) 
        x = "Log Population",
        y = "Predicted Probability") +
   theme_minimal()
+ggsave(file = here("Output", "Plot1b.png")) #saving as image
 
 
-# Plotting the Regression Models for the Multivariate Analysis
+
+## Plotting the Regression Models for the Multivariate Analysis
 # Create a new dataframe for plotting
 plot_data1 <- data.frame(
   Log_Population = fh_pop_gdp$Log_Population,
@@ -62,7 +64,7 @@ ggplot(plot_data1, aes(x = Log_Population, y = Total_Score)) +
   theme_minimal()
 ggsave(file = here("Output", "Plot2a.png")) #saving as image
 
-# Create a new dataframe for plotting
+# Create a new data frame for plotting
 plot_data2 <- data.frame(
   GDP_per_Capita = fh_pop_gdp$GDP_per_Capita,
   Total_Score = fh_pop_gdp$Total_Score,

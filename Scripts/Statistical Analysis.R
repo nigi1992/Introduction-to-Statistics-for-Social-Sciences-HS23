@@ -65,6 +65,9 @@ summary(fit2)
 
 ## Regression Table
 library(stargazer)
+# Table 1
 stargazer(fit1c, fit2, type = "text", title = "Regression Table", out = "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Output/Regression Table.txt") 
-          
+
+# Table 2          
+stargazer(fit1c, fit_ord, fit2, type = "text", title = "Regression Table 2", out = "/Users/nicolaswaser/New-project-GitHub-first/R/Capstone Project HS23/Output/Regression Table 2.txt") 
 
