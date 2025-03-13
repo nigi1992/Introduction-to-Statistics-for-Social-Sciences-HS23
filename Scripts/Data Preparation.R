@@ -21,7 +21,7 @@ head(GDPperCapita_data)
 View(GDPperCapita_data)
 
 # Preparing the data for merge
-install.packages(dplyr)
+install.packages("dplyr")
 library(dplyr)
 
 # selecting relevant columns, filtering out territories + year earlier than 2022 and renaming columns
